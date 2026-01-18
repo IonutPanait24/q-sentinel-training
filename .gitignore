@@ -1,0 +1,58 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# =========================
+# YOLO / Training Outputs
+# =========================
+runs/
+wandb/
+yolo*.pt
+
+# Keep trained models out of repo (optional)
+# Comment next line if you WANT to commit best.pt
+runs/**/weights/*.pt
+
+# =========================
+# Datasets (DO NOT COMMIT)
+# =========================
+Dataset/
+dataset/
+data/
+*.zip
+*.rar
+*.7z
+
+# =========================
+# Logs / Reports
+# =========================
+logs/
+reports/
+*.csv
+*.png
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# =========================
+# Misc
+# =========================
+*.log
