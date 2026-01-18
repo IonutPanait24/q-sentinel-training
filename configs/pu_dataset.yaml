@@ -1,0 +1,11 @@
+path: C:/Users/yonut/PycharmProjects/Dataset
+train: images/train
+val: images/val
+
+names:
+  0: PU1_OK
+  1: PU2_OK
+  2: PU3_OK
+  3: PU1_NOK
+  4: PU2_NOK
+  5: PU3_NOK
