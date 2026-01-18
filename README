@@ -1,0 +1,195 @@
+Q-Sentinel Training
+
+YOLOv8 Training Pipeline for Industrial PU Inspection
+
+Q-Sentinel TrainingModels is a dedicated repository for training, validating, and evaluating YOLOv8 object detection models used by the Q-Sentinel AI Vision System.
+
+This project focuses on industrial-quality dataset handling, robust evaluation, and production-oriented metrics (OK/NOK decision logic), not just raw mAP scores.
+
+🎯 Project Goal
+
+Train a YOLOv8 model to inspect camera brackets with PU application and detect:
+
+PU correctly applied (OK)
+
+PU missing / incorrect (NOK)
+
+The trained model is later loaded into the Q-Sentinel runtime application for real production use.
+
+🧠 Key Features
+
+✔ YOLOv8 training (CPU-safe)
+✔ Support for 6-class setup (PU1/PU2/PU3 – OK & NOK)
+✔ Dataset validation & sanity checks
+✔ Controlled NOK data augmentation (bbox-safe)
+✔ Training loss & metric plots
+✔ Piece-level OK/NOK accuracy evaluation
+✔ Production-oriented metrics (Recall, False Rejects, Miss Rate)
+
+📁 Repository Structure
+Q-Sentinel-TrainingModels/
+├── configs/
+│   └── pu_dataset.yaml        # YOLO dataset configuration
+├── scripts/
+│   ├── train_yolo.py          # Model training
+│   ├── plot_results.py        # Loss & metric graphs
+│   ├── eval_piece_accuracy_6cls.py  # OK/NOK accuracy per piece
+│   ├── dataset_check.py       # Dataset validation
+├── tools/
+│   └── augment_nok_yolo.py    # Controlled NOK augmentation
+├── runs/                      # YOLO training outputs (auto-generated)
+├── requirements.txt
+└── README.md
+
+🗂 Dataset Structure (YOLO format)
+
+Dataset path used in this project:
+
+C:/Users/yonut/PycharmProjects/Dataset
+
+
+Required structure:
+
+Dataset/
+├── images/
+│   ├── train/
+│   └── val/
+└── labels/
+    ├── train/
+    └── val/
+
+
+Each image must have a corresponding .txt label file with the same filename.
+
+🏷 Class Mapping (6-Class Setup)
+0: PU1_OK
+1: PU2_OK
+2: PU3_OK
+3: PU1_NOK
+4: PU2_NOK
+5: PU3_NOK
+
+
+📌 Each image contains 3 bounding boxes (PU1, PU2, PU3).
+📌 A part is considered NOK if any PUx_NOK is present.
+
+🧪 Dataset Validation
+
+Before training, always run:
+
+python scripts/dataset_check.py
+
+
+This checks:
+
+missing labels
+
+invalid class IDs
+
+class distribution
+
+train / val balance
+
+🔁 Controlled Data Augmentation (NOK Only)
+
+If real NOK samples are limited, use controlled augmentation:
+
+python tools/augment_nok_yolo.py
+
+
+✔ Augments only NOK images
+✔ Preserves bounding box correctness
+✔ Applies safe transformations (brightness, blur, noise, small rotation)
+❌ No flips or unsafe geometry changes
+
+🚀 Training the Model
+python scripts/train_yolo.py
+
+
+Recommended parameters (CPU):
+
+Model: yolov8n.pt
+
+Epochs: 50
+
+Batch size: 8
+
+Image size: 640
+
+Training artifacts are saved automatically to:
+
+runs/detect/train/
+├── weights/best.pt
+├── results.csv
+└── results.png
+
+📊 Visualizing Training Results
+
+Generate custom graphs:
+
+python scripts/plot_results.py
+
+
+Outputs:
+
+custom_loss.png
+
+custom_metrics.png
+
+🧠 Evaluating Industrial Performance (OK / NOK)
+
+YOLO mAP alone is not enough for production.
+Evaluate piece-level accuracy:
+
+python scripts/eval_piece_accuracy_6cls.py
+
+
+Reported metrics:
+
+Accuracy (OK/NOK)
+
+Precision
+
+Recall
+
+False Reject Rate (OK → NOK)
+
+Miss Rate (NOK → OK)
+
+These metrics directly reflect factory performance.
+
+🔗 Integration
+
+The resulting model (best.pt) is loaded into the Q-Sentinel runtime application for:
+
+live camera inspection
+
+image upload testing
+
+operator confirmation workflow
+
+production statistics & reporting
+
+Training and runtime are intentionally separated.
+
+⚠️ Notes & Best Practices
+
+Do not train on Python 3.12 (use 3.9–3.10)
+
+Avoid copying images without real augmentation
+
+Keep validation set untouched
+
+Prioritize Recall on NOK over raw mAP
+
+🏭 Production Philosophy
+
+A model with slightly lower mAP but high NOK recall
+is far safer than a “perfect” mAP model that misses defects.
+
+This repository is built with industrial reliability in mind.
+
+📌 License
+
+Internal / R&D use.
+Adapt freely for industrial vision projects.
