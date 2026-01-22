@@ -1,44 +1,90 @@
-from ultralytics import YOLO
+# scripts/train_yolo.py
+import argparse
+import shutil
 from pathlib import Path
+from datetime import datetime
 
-def train_yolo(
-    model_name="yolov8n.pt",
-    epochs=2,
-    imgsz=640,
-    batch=8,
-):
-    ROOT = Path(__file__).resolve().parent.parent
-    data_path = ROOT / "configs" / "pu_dataset.yaml"
+from ultralytics import YOLO
+
+
+def export_named_model(run_dir: Path, model_name: str) -> Path | None:
+    run_dir = Path(run_dir)
+    best = run_dir / "weights" / "best.pt"
+    if not best.exists():
+        print(f"[WARN] best.pt not found at: {best}")
+        return None
+
+    out_dir = Path("models")
+    out_dir.mkdir(exist_ok=True)
+    out = out_dir / f"{model_name}.pt"
+    shutil.copy(best, out)
+    print(f"QS_MODEL_SAVED={out}")  # UI can parse this if needed
+    return out
+
+
+def train_yolo(data: Path, model: Path, epochs: int, imgsz: int, batch: int, name: str):
+    data = Path(data)
+    model = Path(model)
+
+    if not data.exists():
+        raise FileNotFoundError(f"Dataset yaml not found: {data}")
+    if not model.exists():
+        raise FileNotFoundError(f"Base model not found: {model}")
 
     print("Starting YOLO training...")
-    print(f"Model: {model_name}")
-    print(f"Dataset: {data_path}")
-    print(f"epochs={epochs} imgsz={imgsz} batch={batch}\n")
+    print(f"Data:   {data}")
+    print(f"Model:  {model}")
+    print(f"Epochs: {epochs}, imgsz: {imgsz}, batch: {batch}")
+    print(f"Name:   {name}")
+    print("-" * 60)
 
-    model = YOLO(model_name)
+    yolo = YOLO(str(model))
 
-    results = model.train(
-        data=str(data_path),
-        epochs=epochs,
-        imgsz=imgsz,
-        batch=batch,
-        project=str(ROOT / "runs" / "detect"),
+    # project/name -> produces runs/detect/<nameX>
+    # We keep it stable: runs/detect/train  (as you already have)
+    results = yolo.train(
+        data=str(data),
+        epochs=int(epochs),
+        imgsz=int(imgsz),
+        batch=int(batch),
+        project="runs/detect",
         name="train",
         exist_ok=True,
-        workers=0,   # Windows safety
+        device="cpu",
+        workers=0,
+        verbose=True,
     )
 
-    print("\n✅ Training finished!\n")
-    print("Final Detection Metrics (val):")
-    print(f"mAP50:     {results.box.map50:.4f}")
-    print(f"mAP50-95:  {results.box.map:.4f}")
-    print(f"Precision: {results.box.mp:.4f}")
-    print(f"Recall:    {results.box.mr:.4f}")
+    run_dir = Path(getattr(results, "save_dir", "")) if results is not None else None
+    if not run_dir or not run_dir.exists():
+        # fallback: default ultralytics path
+        run_dir = Path("runs/detect/train")
 
-    print("\nArtifacts:")
-    print(ROOT / "runs" / "detect" / "train" / "weights" / "best.pt")
-    print(ROOT / "runs" / "detect" / "train" / "results.csv")
-    print(ROOT / "runs" / "detect" / "train" / "results.png")
+    print(f"Results saved to {run_dir}")  # UI parses this line
+    export_named_model(run_dir, name)
+
+
+def build_argparser():
+    p = argparse.ArgumentParser(description="Q-Sentinel TrainingModels - YOLO trainer")
+    p.add_argument("--data", type=str, default=str(Path("configs") / "pu_dataset.yaml"),
+                   help="Path to YOLO dataset yaml")
+    p.add_argument("--model", type=str, default=str(Path("scripts") / "yolov8n.pt"),
+                   help="Path to base model .pt (yolov8n.pt etc.)")
+    p.add_argument("--epochs", type=int, default=50)
+    p.add_argument("--imgsz", type=int, default=640)
+    p.add_argument("--batch", type=int, default=16)
+    p.add_argument("--name", type=str, default=f"qs_model_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                   help="Export name for final model (models/<name>.pt)")
+    return p
+
 
 if __name__ == "__main__":
-    train_yolo()
+    args = build_argparser().parse_args()
+    train_yolo(
+        data=Path(args.data),
+        model=Path(args.model),
+        epochs=args.epochs,
+        imgsz=args.imgsz,
+        batch=args.batch,
+        name=args.name
+    )
