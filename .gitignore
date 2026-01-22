@@ -1,58 +1,97 @@
-# =========================
+# ===============================
 # Python
-# =========================
+# ===============================
 __pycache__/
 *.py[cod]
-*$py.class
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
 
-# Virtual environments
+# ===============================
+# Virtual Environments
+# ===============================
 .venv/
 venv/
 env/
 
-# =========================
-# YOLO / Training Outputs
-# =========================
-runs/
-wandb/
-yolo*.pt
-
-# Keep trained models out of repo (optional)
-# Comment next line if you WANT to commit best.pt
-runs/**/weights/*.pt
-
-# =========================
-# Datasets (DO NOT COMMIT)
-# =========================
-Dataset/
-dataset/
-data/
-*.zip
-*.rar
-*.7z
-
-# =========================
-# Logs / Reports
-# =========================
-logs/
-reports/
-*.csv
-*.png
-
-# =========================
-# OS / Editor
-# =========================
-.DS_Store
-Thumbs.db
-
-# PyCharm / IntelliJ
+# ===============================
+# IDEs / Editors
+# ===============================
+.vscode/
 .idea/
 *.iml
 
-# VS Code
-.vscode/
+# ===============================
+# OS / System files
+# ===============================
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# =========================
-# Misc
-# =========================
+# ===============================
+# Logs & temporary files
+# ===============================
 *.log
+*.tmp
+*.bak
+
+# ===============================
+# YOLO / Training Outputs
+# ===============================
+runs/
+results/
+weights/
+*.pt
+*.onnx
+
+# ===============================
+# Generated datasets / configs
+# ===============================
+configs/auto_*.yaml
+configs/generated_*.yaml
+
+# ===============================
+# Cache / Data processing
+# ===============================
+.cache/
+*.csv
+
+# ===============================
+# Images generated during training
+# ===============================
+*_batch*.jpg
+*_labels.jpg
+*_pred.jpg
+results.png
+confusion_matrix.png
+
+# ===============================
+# Charts / exports
+# ===============================
+charts/
+exports/
+
+# ===============================
+# Secrets / local configs
+# ===============================
+.env
+.env.*
+
+# ===============================
+# Jupyter
+# ===============================
+.ipynb_checkpoints/
+
+# ===============================
+# Draw.io / diagrams (optional)
+# Uncomment if you don’t want diagrams tracked
+# ===============================
+# *.drawio
+
+# ===============================
+# Keep essential project files
+# ===============================
+!requirements.txt
+!README.md
