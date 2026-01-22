@@ -1,66 +1,95 @@
+from __future__ import annotations
+
+import argparse
 from pathlib import Path
-from collections import Counter
 
-DATASET = Path(r"C:\Users\yonut\PycharmProjects\Dataset")
+IMG_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 
-def main():
-    img_train = DATASET / "images" / "train"
-    img_val = DATASET / "images" / "val"
-    lab_train = DATASET / "labels" / "train"
-    lab_val = DATASET / "labels" / "val"
 
-    for p in [img_train, img_val, lab_train, lab_val]:
-        if not p.exists():
-            raise FileNotFoundError(f"Missing folder: {p}")
+def _collect_images(images_dir: Path):
+    if not images_dir.exists():
+        return []
+    return [p for p in images_dir.rglob("*") if p.suffix.lower() in IMG_EXTS]
 
-    def scan(img_dir, lab_dir):
-        exts = {".jpg",".jpeg",".png",".bmp",".webp"}
-        imgs = sorted([p for p in img_dir.iterdir() if p.suffix.lower() in exts])
 
-        missing = []
-        class_counts = Counter()
-        bad_lines = 0
+def _check_split(images_dir: Path, labels_dir: Path, split_name: str):
+    images = _collect_images(images_dir)
 
-        for im in imgs:
-            txt = lab_dir / f"{im.stem}.txt"
-            if not txt.exists():
-                missing.append(im.name)
-                continue
+    missing_labels = 0
+    bad_lines = 0
+    class_counts = {}
 
-            lines = txt.read_text(encoding="utf-8", errors="ignore").strip().splitlines()
+    for img in images:
+        txt = labels_dir / f"{img.stem}.txt"
+        if not txt.exists():
+            missing_labels += 1
+            continue
+
+        try:
+            lines = txt.read_text(encoding="utf-8", errors="replace").splitlines()
             for ln in lines:
                 ln = ln.strip()
                 if not ln:
                     continue
                 parts = ln.split()
-                try:
-                    cid = int(float(parts[0]))
-                    if cid < 0 or cid > 5:
-                        bad_lines += 1
-                    class_counts[cid] += 1
-                except:
+                # YOLO format: cls x y w h
+                if len(parts) != 5:
                     bad_lines += 1
+                    continue
+                cls_id = int(float(parts[0]))
+                class_counts[cls_id] = class_counts.get(cls_id, 0) + 1
+        except Exception:
+            bad_lines += 1
 
-        return len(imgs), missing, class_counts, bad_lines
+    print(f"=== {split_name.upper()} ===")
+    print(f"Images: {len(images)}")
+    print(f"Missing labels: {missing_labels}")
+    print(f"Bad lines: {bad_lines}")
+    print(f"Class counts: {class_counts}")
+    print()
 
-    t_imgs, t_missing, t_counts, t_bad = scan(img_train, lab_train)
-    v_imgs, v_missing, v_counts, v_bad = scan(img_val, lab_val)
+    return {
+        "images": len(images),
+        "missing_labels": missing_labels,
+        "bad_lines": bad_lines,
+        "class_counts": class_counts,
+    }
 
-    print("\n=== TRAIN ===")
-    print("Images:", t_imgs)
-    print("Missing labels:", len(t_missing))
-    if t_missing[:10]:
-        print("Examples:", t_missing[:10])
-    print("Class counts:", dict(t_counts))
-    print("Bad lines:", t_bad)
 
-    print("\n=== VAL ===")
-    print("Images:", v_imgs)
-    print("Missing labels:", len(v_missing))
-    if v_missing[:10]:
-        print("Examples:", v_missing[:10])
-    print("Class counts:", dict(v_counts))
-    print("Bad lines:", v_bad)
+def main():
+    ap = argparse.ArgumentParser(description="Q-Sentinel TrainingModels - dataset checker (folder mode)")
+    ap.add_argument("--root", type=str, required=True, help="Dataset root folder containing images/ and labels/")
+    args = ap.parse_args()
+
+    root = Path(args.root)
+
+    train_img = root / "images" / "train"
+    val_img = root / "images" / "val"
+    train_lbl = root / "labels" / "train"
+    val_lbl = root / "labels" / "val"
+
+    # Basic structure validation
+    errors = []
+    if not train_img.exists(): errors.append(f"Missing folder: {train_img}")
+    if not val_img.exists(): errors.append(f"Missing folder: {val_img}")
+    if not train_lbl.exists(): errors.append(f"Missing folder: {train_lbl}")
+    if not val_lbl.exists(): errors.append(f"Missing folder: {val_lbl}")
+
+    if errors:
+        for e in errors:
+            print("[ERROR]", e)
+        raise SystemExit(2)
+
+    r1 = _check_split(train_img, train_lbl, "train")
+    r2 = _check_split(val_img, val_lbl, "val")
+
+    total_issues = r1["missing_labels"] + r2["missing_labels"] + r1["bad_lines"] + r2["bad_lines"]
+    if total_issues > 0:
+        raise SystemExit(2)
+
+    print("Dataset OK ✅")
+    raise SystemExit(0)
+
 
 if __name__ == "__main__":
     main()
