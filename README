@@ -1,195 +1,249 @@
-Q-Sentinel Training
+Q-Sentinel TrainingModels
+GUI-Based YOLO Training & Evaluation Platform
 
-YOLOv8 Training Pipeline for Industrial PU Inspection
+Q-Sentinel TrainingModels is a desktop AI application that provides a complete, visual, and controlled workflow for training YOLO-based computer vision models.
 
-Q-Sentinel TrainingModels is a dedicated repository for training, validating, and evaluating YOLOv8 object detection models used by the Q-Sentinel AI Vision System.
+It removes the need for:
 
-This project focuses on industrial-quality dataset handling, robust evaluation, and production-oriented metrics (OK/NOK decision logic), not just raw mAP scores.
+manual CLI training
 
-🎯 Project Goal
+direct YAML editing
 
-Train a YOLOv8 model to inspect camera brackets with PU application and detect:
+interpreting noisy console outputs
 
-PU correctly applied (OK)
+and replaces them with:
 
-PU missing / incorrect (NOK)
+a modern GUI
 
-The trained model is later loaded into the Q-Sentinel runtime application for real production use.
+guided training steps
 
-🧠 Key Features
+real-time progress monitoring
 
-✔ YOLOv8 training (CPU-safe)
-✔ Support for 6-class setup (PU1/PU2/PU3 – OK & NOK)
-✔ Dataset validation & sanity checks
-✔ Controlled NOK data augmentation (bbox-safe)
-✔ Training loss & metric plots
-✔ Piece-level OK/NOK accuracy evaluation
-✔ Production-oriented metrics (Recall, False Rejects, Miss Rate)
+automatic metrics visualization
 
-📁 Repository Structure
-Q-Sentinel-TrainingModels/
-├── configs/
-│   └── pu_dataset.yaml        # YOLO dataset configuration
-├── scripts/
-│   ├── train_yolo.py          # Model training
-│   ├── plot_results.py        # Loss & metric graphs
-│   ├── eval_piece_accuracy_6cls.py  # OK/NOK accuracy per piece
-│   ├── dataset_check.py       # Dataset validation
-├── tools/
-│   └── augment_nok_yolo.py    # Controlled NOK augmentation
-├── runs/                      # YOLO training outputs (auto-generated)
-├── requirements.txt
-└── README.md
+This project is part of the Q-Sentinel AI Vision System and was developed as a final AI Engineering project.
 
-🗂 Dataset Structure (YOLO format)
+🚀 Key Features
 
-Dataset path used in this project:
+✔️ Dataset folder validation (images + labels)
+✔️ Automatic YOLO data.yaml generation
+✔️ Class detection & visualization
+✔️ Configurable training parameters (epochs, batch, image size)
+✔️ Live training logs (YOLO output)
+✔️ Epoch-based progress tracking
+✔️ KPI metrics (Precision, Recall, mAP)
+✔️ Loss & metrics charts
+✔️ Training artifact preview
+✔️ Safe start / stop training control
 
-C:/Users/yonut/PycharmProjects/Dataset
+🧠 Why This Project Matters
 
+Most YOLO training workflows are:
 
-Required structure:
+CLI-only
 
-Dataset/
-├── images/
-│   ├── train/
-│   └── val/
-└── labels/
-    ├── train/
-    └── val/
+error-prone
 
+hard to debug
 
-Each image must have a corresponding .txt label file with the same filename.
+unfriendly for non-ML users
 
-🏷 Class Mapping (6-Class Setup)
-0: PU1_OK
-1: PU2_OK
-2: PU3_OK
-3: PU1_NOK
-4: PU2_NOK
-5: PU3_NOK
+Q-Sentinel TrainingModels bridges the gap between:
 
+raw ML tooling
 
-📌 Each image contains 3 bounding boxes (PU1, PU2, PU3).
-📌 A part is considered NOK if any PUx_NOK is present.
+real-world engineering usability
 
-🧪 Dataset Validation
+It demonstrates how AI systems can be production-ready, user-safe, and visual.
 
-Before training, always run:
+🖥️ Application Overview
+1️⃣ Dataset Tab
 
-python scripts/dataset_check.py
+Dataset folder selection
 
+Dataset structure validation
 
-This checks:
+Automatic data.yaml generation
 
-missing labels
+Detected classes preview
 
-invalid class IDs
+Dataset KPIs:
 
-class distribution
+TRAIN images
 
-train / val balance
+VAL images
 
-🔁 Controlled Data Augmentation (NOK Only)
+Missing labels
 
-If real NOK samples are limited, use controlled augmentation:
+Invalid label lines
 
-python tools/augment_nok_yolo.py
+2️⃣ Training Tab
 
+Base YOLO model selection (.pt)
 
-✔ Augments only NOK images
-✔ Preserves bounding box correctness
-✔ Applies safe transformations (brightness, blur, noise, small rotation)
-❌ No flips or unsafe geometry changes
+Training configuration:
 
-🚀 Training the Model
-python scripts/train_yolo.py
+epochs
 
+image size
 
-Recommended parameters (CPU):
+batch size
 
-Model: yolov8n.pt
+Controlled training start / stop
 
-Epochs: 50
+Live YOLO logs
 
-Batch size: 8
+Training progress tracking
 
-Image size: 640
+3️⃣ Charts Tab
 
-Training artifacts are saved automatically to:
-
-runs/detect/train/
-├── weights/best.pt
-├── results.csv
-└── results.png
-
-📊 Visualizing Training Results
-
-Generate custom graphs:
-
-python scripts/plot_results.py
-
-
-Outputs:
-
-custom_loss.png
-
-custom_metrics.png
-
-🧠 Evaluating Industrial Performance (OK / NOK)
-
-YOLO mAP alone is not enough for production.
-Evaluate piece-level accuracy:
-
-python scripts/eval_piece_accuracy_6cls.py
-
-
-Reported metrics:
-
-Accuracy (OK/NOK)
+Training KPIs:
 
 Precision
 
 Recall
 
-False Reject Rate (OK → NOK)
+mAP50
 
-Miss Rate (NOK → OK)
+mAP50-95
 
-These metrics directly reflect factory performance.
+Charts:
 
-🔗 Integration
+train / validation loss curves
 
-The resulting model (best.pt) is loaded into the Q-Sentinel runtime application for:
+metrics evolution per epoch
 
-live camera inspection
+Training artifacts:
 
-image upload testing
+results curves
 
-operator confirmation workflow
+confusion matrix
 
-production statistics & reporting
+🧱 System Architecture
+Dataset (images + labels)
+        ↓
+Dataset Validation
+        ↓
+data.yaml Generation
+        ↓
+YOLO Training (Ultralytics)
+        ↓
+runs/detect/trainX
+        ↓
+Metrics • Charts • Artifacts
 
-Training and runtime are intentionally separated.
+🛠️ Tech Stack
+Core
 
-⚠️ Notes & Best Practices
+Python 3.11+
 
-Do not train on Python 3.12 (use 3.9–3.10)
+PySide6 (Qt for Python)
 
-Avoid copying images without real augmentation
+AI / ML
 
-Keep validation set untouched
+YOLOv8 (Ultralytics)
 
-Prioritize Recall on NOK over raw mAP
+PyTorch
 
-🏭 Production Philosophy
+Data & Visualization
 
-A model with slightly lower mAP but high NOK recall
-is far safer than a “perfect” mAP model that misses defects.
+Pandas
 
-This repository is built with industrial reliability in mind.
+Matplotlib
 
-📌 License
+Engineering
 
-Internal / R&D use.
-Adapt freely for industrial vision projects.
+Subprocess-controlled training
+
+Real-time log parsing
+
+Thread-safe UI updates
+
+Modular architecture (UI / Worker / Metrics)
+
+📁 Project Structure
+q-sentinel-training/
+│
+├── ui/
+│   ├── app.py                 # main GUI application
+│   ├── training_worker.py     # subprocess & progress parser
+│   ├── metrics.py             # results.csv processing
+│   ├── curves.py              # charts generation
+│   ├── widgets.py             # reusable UI components
+│   └── styles.py              # dark tech UI theme
+│
+├── scripts/
+│   ├── train_yolo.py          # YOLO training wrapper
+│   ├── dataset_check.py       # dataset validator
+│   └── generate_yaml.py       # auto data.yaml generator
+│
+├── configs/
+├── runs/                      # YOLO outputs (auto-generated)
+├── models/                    # exported models
+├── assets/
+├── requirements.txt
+└── README.md
+
+▶️ Getting Started
+1. Install dependencies
+pip install -r requirements.txt
+
+2. Run the application
+python ui/app.py
+
+📤 Model Output
+
+After training:
+
+runs/detect/trainX/weights/best.pt
+
+
+This model can be:
+
+used directly for inference
+
+exported to production
+
+integrated into Q-Sentinel Runtime
+
+🎓 Educational Context
+
+Developed as part of:
+
+AI Engineering – Software Development Academy (SDA)
+
+Demonstrates:
+
+end-to-end ML workflows
+
+applied computer vision
+
+production-oriented AI design
+
+GUI-driven ML systems
+
+🧩 Part of the Q-Sentinel Ecosystem
+
+Q-Sentinel TrainingModels → training & evaluation
+
+Q-Sentinel Runtime → inference & monitoring
+
+Together they form a complete AI Vision System.
+
+🔮 Future Improvements
+
+Model export manager
+
+Multi-GPU support
+
+Experiment comparison
+
+Inference preview
+
+Dataset augmentation tools
+
+👤 Author
+
+[Panait Ionut]
+AI Engineering Graduate
+Software Development Academy (SDA)
